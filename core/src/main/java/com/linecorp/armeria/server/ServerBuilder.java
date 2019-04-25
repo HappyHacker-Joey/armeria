@@ -665,6 +665,7 @@ public final class ServerBuilder {
      * @param shutdownOnStop whether to shut down the {@link Executor} when the {@link Server} stops
      */
     public ServerBuilder blockingTaskExecutor(Executor blockingTaskExecutor, boolean shutdownOnStop) {
+        //FIXME : Is it needed. It is incorrect definition of this method?
         this.blockingTaskExecutor = requireNonNull(blockingTaskExecutor, "blockingTaskExecutor");
         shutdownBlockingTaskExecutorOnStop = shutdownOnStop;
         return this;

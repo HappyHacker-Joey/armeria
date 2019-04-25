@@ -26,6 +26,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -44,6 +45,7 @@ import com.linecorp.armeria.client.ClientFactoryBuilder;
 import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.common.AggregatedHttpMessage;
 import com.linecorp.armeria.server.Server;
+import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.Service;
 import com.linecorp.armeria.testing.server.ServerRule;
 
@@ -228,6 +230,41 @@ public abstract class WebAppContainerTest {
 
     @Test
     public void echoPost() throws Exception {
+        try (CloseableHttpClient hc = HttpClients.createMinimal()) {
+            final HttpPost post = new HttpPost(server().uri("/jsp/echo_post.jsp"));
+            post.setEntity(new StringEntity("test"));
+
+            try (CloseableHttpResponse res = hc.execute(post)) {
+                assertThat(res.getStatusLine().toString()).isEqualTo("HTTP/1.1 200 OK");
+                assertThat(res.getFirstHeader(HttpHeaderNames.CONTENT_TYPE.toString()).getValue())
+                        .startsWith("text/html");
+                final String actualContent = CR_OR_LF.matcher(EntityUtils.toString(res.getEntity()))
+                                                     .replaceAll("");
+                assertThat(actualContent).isEqualTo(
+                        "<html><body>" +
+                        "<p>Check request body</p>" +
+                        "<p>test</p>" +
+                        "</body></html>");
+            }
+        }
+    }
+
+    private class CustomRule extends ServerRule{
+
+        @Override
+        protected void configure(ServerBuilder sb) throws Exception {
+            Executor executor = new Executor() {
+
+                @Override
+                public void execute(Runnable command) {
+
+                }
+            };
+            sb.blockingTaskExecutor(null, true);
+        }
+    }
+    @Test
+    public void echoPost4Executor() throws Exception {
         try (CloseableHttpClient hc = HttpClients.createMinimal()) {
             final HttpPost post = new HttpPost(server().uri("/jsp/echo_post.jsp"));
             post.setEntity(new StringEntity("test"));

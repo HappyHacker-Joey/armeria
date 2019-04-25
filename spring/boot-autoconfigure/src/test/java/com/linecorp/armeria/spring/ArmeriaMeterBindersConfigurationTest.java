@@ -63,6 +63,7 @@ public class ArmeriaMeterBindersConfigurationTest {
     @Test
     public void testDefaultMetrics() throws Exception {
         final Map<String, Double> measurements = MoreMeters.measureAll(registry);
+        System.out.println(measurements);
         assertThat(measurements).containsKeys(
                 "jvm.buffer.count#value{id=direct}",
                 "jvm.classes.loaded#value",
